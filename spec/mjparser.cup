@@ -65,7 +65,7 @@ nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor
 
 Program ::= (Program) PROG IDENT:progName DeclList LBRACE MethodDeclList RBRACE;
 
-DeclList ::= (DeclList) DeclList Decl
+DeclList ::= (DeclarationList) DeclList Decl
 		|
 		(NoDeclList) /* epsilon */
 		;
@@ -80,8 +80,8 @@ ConstDecl ::=(ConstDecl) CONST Type ConstDeclList SEMICOLON;
 
 ConstDeclList ::= (ConstDeclListMore) ConstDeclList COMMA ConstDeclOne
 				|
-				 (ConsDeclListOne) ConstDeclOne
-				 ;
+				(ConsDeclListOne) ConstDeclOne
+				;
 				
 ConstDeclOne ::=(ConstNumber) IDENT AssignOp NUMBER
 			|
@@ -103,7 +103,7 @@ VarOne::= (VarOneArray) IDENT LSQUARE RSQUARE
 		(VarOneVar) IDENT
 		;
 		
-VarDeclList ::= (VarDeclList) VarDeclList VarDecl
+VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
 			|
 			(NoVarDeclList) /* epsilon */
 			;
@@ -155,18 +155,18 @@ OptMinus::=(Negative) MINUS
 		
 		
 		
-AddOpTermList ::=(AddOpTermList) AddOpTermList AddOpTerm
+AddOpTermList ::=(AddOpTerms) AddOpTermList AddOpTerm
 				|
-				(NoAddOpTermList) /* epsilon */
+				(NoAddOpTerms) /* epsilon */
 				;
 				
 AddOpTerm ::=(AddOpTerm) AddOp Term;
 
 Term ::=(Term) Factor MulOpFactorList;
 
-MulOpFactorList ::=(MulOpFactorList) MulOpFactorList MulOpFactor
+MulOpFactorList ::=(MulOpFactors) MulOpFactorList MulOpFactor
 				|
-				(NoMulOpFactorList)/* epsilon */
+				(NoMulOpFactors)/* epsilon */
 				;
 				
 MulOpFactor ::=(MulOpFactor) MulOp Factor;
@@ -186,9 +186,9 @@ Factor ::=(FactorDesignator) Designator
 		
 Designator ::= (Designator) IDENT DesignatorOptList;
 
-DesignatorOptList ::=(DesignatorOptList) DesignatorOptList DesignatorOpt
+DesignatorOptList ::=(DesignatorOpts) DesignatorOptList DesignatorOpt
 					|
-					(NoDesignatorOptList)/* epsilon */
+					(NoDesignatorOpts)/* epsilon */
 					;
 
 DesignatorOpt ::=(DesignatorOptDot) DOT IDENT

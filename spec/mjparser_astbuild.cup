@@ -89,7 +89,7 @@ nonterminal OptMinus OptMinus;
 
 Program ::= (Program) PROG IDENT:progName DeclList:D1 LBRACE MethodDeclList:M2 RBRACE {: RESULT=new Program(progName, D1, M2); RESULT.setLine(progNameleft); :};
 
-DeclList ::= (DeclList) DeclList:D1 Decl:D2 {: RESULT=new DeclList(D1, D2); RESULT.setLine(D1left); :}
+DeclList ::= (DeclarationList) DeclList:D1 Decl:D2 {: RESULT=new DeclarationList(D1, D2); RESULT.setLine(D1left); :}
 		|
 		(NoDeclList) {: RESULT=new NoDeclList(); :} /* epsilon */
 		;
@@ -104,8 +104,8 @@ ConstDecl ::=(ConstDecl) CONST Type:T1 ConstDeclList:C2 SEMICOLON {: RESULT=new 
 
 ConstDeclList ::= (ConstDeclListMore) ConstDeclList:C1 COMMA ConstDeclOne:C2 {: RESULT=new ConstDeclListMore(C1, C2); RESULT.setLine(C1left); :}
 				|
-				 (ConsDeclListOne) ConstDeclOne:C1 {: RESULT=new ConsDeclListOne(C1); RESULT.setLine(C1left); :}
-				 ;
+				(ConsDeclListOne) ConstDeclOne:C1 {: RESULT=new ConsDeclListOne(C1); RESULT.setLine(C1left); :}
+				;
 				
 ConstDeclOne ::=(ConstNumber) IDENT:I1 AssignOp:A2 NUMBER:N3 {: RESULT=new ConstNumber(I1, A2, N3); RESULT.setLine(I1left); :}
 			|
@@ -127,7 +127,7 @@ VarOne::= (VarOneArray) IDENT:I1 LSQUARE RSQUARE {: RESULT=new VarOneArray(I1); 
 		(VarOneVar) IDENT:I1 {: RESULT=new VarOneVar(I1); RESULT.setLine(I1left); :}
 		;
 		
-VarDeclList ::= (VarDeclList) VarDeclList:V1 VarDecl:V2 {: RESULT=new VarDeclList(V1, V2); RESULT.setLine(V1left); :}
+VarDeclList ::= (VarDeclarationList) VarDeclList:V1 VarDecl:V2 {: RESULT=new VarDeclarationList(V1, V2); RESULT.setLine(V1left); :}
 			|
 			(NoVarDeclList) {: RESULT=new NoVarDeclList(); :} /* epsilon */
 			;
@@ -179,18 +179,18 @@ OptMinus::=(Negative) MINUS {: RESULT=new Negative(); :}
 		
 		
 		
-AddOpTermList ::=(AddOpTermList) AddOpTermList:A1 AddOpTerm:A2 {: RESULT=new AddOpTermList(A1, A2); RESULT.setLine(A1left); :}
+AddOpTermList ::=(AddOpTerms) AddOpTermList:A1 AddOpTerm:A2 {: RESULT=new AddOpTerms(A1, A2); RESULT.setLine(A1left); :}
 				|
-				(NoAddOpTermList) {: RESULT=new NoAddOpTermList(); :} /* epsilon */
+				(NoAddOpTerms) {: RESULT=new NoAddOpTerms(); :} /* epsilon */
 				;
 				
 AddOpTerm ::=(AddOpTerm) AddOp:A1 Term:T2 {: RESULT=new AddOpTerm(A1, T2); RESULT.setLine(A1left); :};
 
 Term ::=(Term) Factor:F1 MulOpFactorList:M2 {: RESULT=new Term(F1, M2); RESULT.setLine(F1left); :};
 
-MulOpFactorList ::=(MulOpFactorList) MulOpFactorList:M1 MulOpFactor:M2 {: RESULT=new MulOpFactorList(M1, M2); RESULT.setLine(M1left); :}
+MulOpFactorList ::=(MulOpFactors) MulOpFactorList:M1 MulOpFactor:M2 {: RESULT=new MulOpFactors(M1, M2); RESULT.setLine(M1left); :}
 				|
-				(NoMulOpFactorList) {: RESULT=new NoMulOpFactorList(); :}/* epsilon */
+				(NoMulOpFactors) {: RESULT=new NoMulOpFactors(); :}/* epsilon */
 				;
 				
 MulOpFactor ::=(MulOpFactor) MulOp:M1 Factor:F2 {: RESULT=new MulOpFactor(M1, F2); RESULT.setLine(M1left); :};
@@ -210,9 +210,9 @@ Factor ::=(FactorDesignator) Designator:D1 {: RESULT=new FactorDesignator(D1); R
 		
 Designator ::= (Designator) IDENT:I1 DesignatorOptList:D2 {: RESULT=new Designator(I1, D2); RESULT.setLine(I1left); :};
 
-DesignatorOptList ::=(DesignatorOptList) DesignatorOptList:D1 DesignatorOpt:D2 {: RESULT=new DesignatorOptList(D1, D2); RESULT.setLine(D1left); :}
+DesignatorOptList ::=(DesignatorOpts) DesignatorOptList:D1 DesignatorOpt:D2 {: RESULT=new DesignatorOpts(D1, D2); RESULT.setLine(D1left); :}
 					|
-					(NoDesignatorOptList) {: RESULT=new NoDesignatorOptList(); :}/* epsilon */
+					(NoDesignatorOpts) {: RESULT=new NoDesignatorOpts(); :}/* epsilon */
 					;
 
 DesignatorOpt ::=(DesignatorOptDot) DOT IDENT:I1 {: RESULT=new DesignatorOptDot(I1); RESULT.setLine(I1left); :}
