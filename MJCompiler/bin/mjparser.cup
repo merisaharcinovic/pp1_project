@@ -41,66 +41,88 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, CONST, LBRACE, RBRACE, SEMICOLON, COMMA, LSQUARE, RSQUARE, CLASS
+terminal PROG, CONST, VOID, READ, PRINT, NEW, FINDANY;
+terminal SEMICOLON, COMMA, DOT;
+terminal ASSIGNMENT, MINUS, PLUS, MUL, DIV, MOD, INC, DEC;
 terminal Integer NUMBER;
+terminal Character CHAR_CONST;
+terminal Boolean BOOL_CONST;
 terminal String IDENT;
-terminal IF, ELSE;
+terminal LBRACE, RBRACE, LPAREN, RPAREN, LSQUARE, RSQUARE;
 
-nonterminal Program, DeclList, MethodDeclList, Decl, ConstDecl, VarDecl, ClassDecl, ConstDeclList, ConstDeclOne, VarList, VarOne
-nonterminal MethodsOpt
+terminal EXTENDS, COLON, ELSE, IF, NOT_EQUAL, AND, EQUAL, LESS, LAMBDA, BREAK, GREATER, WHILE, GREATER_EQUAL, LESS_EQUAL, FOREACH, CLASS, RETURN, CONTINUE, OR;
 
-Program ::= (Program) PROG IDENT DeclList LBRACE MethodDeclList RBRACE;
 
-DeclList ::= (DeclList) DeclList Decl
+nonterminal Program, Type;
+nonterminal DeclList, Decl;
+nonterminal MethodDeclList, MethodDecl;
+nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
+nonterminal VarDecl, VarList, VarOne, VarDeclList;
+nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, Designator, DesignatorOptList, DesignatorOpt; 
+nonterminal AssignOp, AddOp, MulOp;
+nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, Expr, OptMinus;
+
+
+Program ::= (Program) PROG IDENT:progName DeclList LBRACE MethodDeclList RBRACE;
+
+DeclList ::= (DeclarationList) DeclList Decl
 		|
-		(NoDecl) /* epsilon */
+		(NoDeclList) /* epsilon */
 		;
 
-Decl ::= ConstDecl | VarDecl;
+Decl ::= (PConstDecl) ConstDecl 
+		| 
+		(PVarDecl)  VarDecl
+		;
 
 
-ConstDecl ::= CONST Type ConstDeclList SEMICOLON;
+ConstDecl ::=(ConstDecl) CONST Type ConstDeclList SEMICOLON;
 
-ConstDeclList ::= ConstDeclList COMMA ConstDeclOne
+ConstDeclList ::= (ConstDeclListMore) ConstDeclList COMMA ConstDeclOne
 				|
-				ConstDeclOne
+				(ConsDeclListOne) ConstDeclOne
+				;
 				
-ConstDeclOne ::= IDENT ASSIGNMENT NUMBER
+ConstDeclOne ::=(ConstNumber) IDENT AssignOp NUMBER
 			|
-			IDENT ASSIGNMENT CHAR_CONST
+			(ConstChar) IDENT AssignOp CHAR_CONST
 			|
-			IDENT ASSIGNMENT BOOL_CONST
+			(ConstBool) IDENT AssignOp BOOL_CONST
 			;
 			
 				
 VarDecl::= (VarDecl) Type VarList SEMICOLON;
 
-VarList::= VarList COMMA VarOne
+VarList::=(VarListMore) VarList COMMA VarOne
 		|
-		VarOne
+		(VarListOne) VarOne
+		;
 
-VarOne::= IDENT LSQUARE RSQUARE
+VarOne::= (VarOneArray) IDENT LSQUARE RSQUARE
 		| 
-		IDENT
+		(VarOneVar) IDENT
+		;
 		
-VarDeclList ::= VarDeclList VarDecl
+VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
 			|
-			/* epsilon */
+			(NoVarDeclList) /* epsilon */
 			;
 
 
 Type ::= (Type) IDENT:typeName;
 
-MethodDecl ::= VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
+MethodDecl ::=(MethodDecl) VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
 
 
-Statement ::= DesignatorStatement SEMICOLON;
+Statement ::= (StatementDesignator) DesignatorStatement SEMICOLON
 			|
-			READ LPAREN Designator RPAREN SEMICOLON;
+			(StatementRead) READ LPAREN Designator RPAREN SEMICOLON
 			|
-			PRINT LPAREN Expr NumConstOpt RPAREN SEMICOLON;
+			(StatementPrint) PRINT LPAREN Expr NumConstOpt RPAREN SEMICOLON
 			|
-			LBRACE StatementList RBRACE
+			(ListOfStatements) LBRACE StatementList RBRACE
+			|
+			(StatementFindAny) Designator AssignOp Designator DOT FINDANY LPAREN Expr RPAREN SEMICOLON
 			;
 
 
@@ -111,107 +133,86 @@ StatementList ::= (Statements) StatementList Statement
 				
 
 
-NumConstOpt ::= COMMA NUMBER
+NumConstOpt ::= (NumConst) COMMA NUMBER
 			|
-			/* epsilon */
+			(NoNumConst) /* epsilon */
 			;
 
 
-DesignatorStatement ::= Designator ASSIGNMENT Expr
+DesignatorStatement ::=(DesignatorAssign) Designator AssignOp Expr
 					|
-					Designator INC
+					(DesignatorInc) Designator INC
 					|
-					Designator DEC
+					(DesignatorDec) Designator DEC
 					;
 
-Expr ::= OptMinus Term AddOpTermList;
+Expr ::=(Expr) OptMinus Term AddOpTermList;
 
-OptMinus::= MINUS
+OptMinus::=(Negative) MINUS
 		|
-		/* epsilon */
+		(Positive) /* epsilon */
 		;
 		
-AddOpTermList ::= AddOpTermList AddOpTerm
+		
+		
+AddOpTermList ::=(AddOpTerms) AddOpTermList AddOpTerm
 				|
-				/* epsilon */
+				(NoAddOpTerms) /* epsilon */
 				;
 				
-AddOpTerm ::= Addop Term;
+AddOpTerm ::=(AddOpTerm) AddOp Term;
 
-Term ::= Factor MulOpFactorList;
+Term ::=(Term) Factor MulOpFactorList;
 
-MulOpFactorList ::= MulOpFactorList MulOpFactor
+MulOpFactorList ::=(MulOpFactors) MulOpFactorList MulOpFactor
 				|
-				/* epsilon */
+				(NoMulOpFactors)/* epsilon */
 				;
 				
-MulOpFactor ::= MulOp Factor;
+MulOpFactor ::=(MulOpFactor) MulOp Factor;
 
-Factor ::= Designator
+Factor ::=(FactorDesignator) Designator
 		|
-		NUMBER
+		(FactorNumber) NUMBER
 		|
-		CHAR_CONST
+		(FactorChar) CHAR_CONST
 		|
-		BOOL_CONST
+		(FactorBool) BOOL_CONST
 		|
-		NEW Type LSQUARE Expr RSQUARE
+		(FactorNewExpr) NEW Type LSQUARE Expr RSQUARE
 		|
-		LPAREN Expr RPAREN
+		(FactorExpr) LPAREN Expr RPAREN
 		;
 		
-Designator ::= IDENT DesignatorOptList;
+Designator ::= (Designator) IDENT DesignatorOptList;
 
-DesignatorOptList ::= DesignatorOptList DesignatorOpt
+DesignatorOptList ::=(DesignatorOpts) DesignatorOptList DesignatorOpt
 					|
-					/* epsilon */
+					(NoDesignatorOpts)/* epsilon */
 					;
 
-DesignatorOpt ::= DOT IDENT
+DesignatorOpt ::=(DesignatorOptDot) DOT IDENT
 				|
-				LSQUARE Expr RSQUARE
+				(DesignatorOptExpr) LSQUARE Expr RSQUARE
 				;
 
-Label ::= IDENT;
+Label ::=(Label) IDENT;
 
-Relop ::= EQUAL
+AssignOp ::=(Assignment) ASSIGNMENT;
+
+		
+AddOp ::=(Plus) PLUS
 		|
-		NOT_EQUAL
-		|
-		GREATER
-		|
-		GREATER_EQUAL
-		|
-		LESS
-		|
-		LESS_EQUAL
+		(Minus) MINUS
 		;
 		
-AddOp ::= PLUS
+MulOp ::=(Mul) MUL
 		|
-		MINUS
-		;
-		
-MulOp ::= MUL
+		(Div) DIV
 		|
-		DIV
-		|
-		MOD
+		(Mod) MOD
 		;
 
 
-
-
-
-			
-Expr ::= (AddExpr) Expr:te Addop Term:t
-	 |
-	 (TermExpr) Term:t
-	 ;
-
-Designator ::= (Designator) IDENT:name;
-
-Addop ::= (Addop) PLUS;
-		
 		
 
