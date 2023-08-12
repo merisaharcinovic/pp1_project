@@ -56,7 +56,7 @@ DeclList ::= (DeclList) DeclList Decl
 		(NoDecl) /* epsilon */
 		;
 
-Decl ::= ConstDecl | VarDecl | ClassDecl;
+Decl ::= ConstDecl | VarDecl;
 
 
 ConstDecl ::= CONST Type ConstDeclList SEMICOLON;
@@ -64,6 +64,14 @@ ConstDecl ::= CONST Type ConstDeclList SEMICOLON;
 ConstDeclList ::= ConstDeclList COMMA ConstDeclOne
 				|
 				ConstDeclOne
+				
+ConstDeclOne ::= IDENT ASSIGNMENT NUMBER
+			|
+			IDENT ASSIGNMENT CHAR_CONST
+			|
+			IDENT ASSIGNMENT BOOL_CONST
+			;
+			
 				
 VarDecl::= (VarDecl) Type VarList SEMICOLON;
 
@@ -75,52 +83,25 @@ VarOne::= IDENT LSQUARE RSQUARE
 		| 
 		IDENT
 		
-VarDeclList ::= (VarDeclarations) VarDeclList VarDecl
+VarDeclList ::= VarDeclList VarDecl
 			|
-			(NoVarDecl) /* epsilon */
+			/* epsilon */
 			;
-
-		
-ClassDecl ::= CLASS IDENT Extends LBRACE VarDeclList MethodsOpt RBRACE;
-
-MethodsOpt ::= LBRACE MethodDeclList RBRACE;
-
 
 
 Type ::= (Type) IDENT:typeName;
 
-MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
-				|
-				(NoMethodDecl) /* epsilon */
-				;
-				
-MethodDecl ::= (MethodDecl) RetType:retType IDENT:methName LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
-RetType::= Type | VOID;
+MethodDecl ::= VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
 
-FormPars ::= (FormParams) FormalParamList
-		  |
-		  (NoFormParam) /* epsilon */
-		  ;
-		  
-FormalParamList ::= (FormalParamDecls) FormalParamList COMMA FormalParamDecl
-				|
-				(SingleFormalParamDecl) FormalParamDecl
-				;
-				
-FormalParamDecl ::= ParamList COMMA Param
-				| 
-				Param;
-	
-Param::=Type IDENT LSQUARE RSQUARE
-		| 
-		Type IDENT;
-		
-		
-Statement ::= DesignatorStatement COMMA
+
+Statement ::= DesignatorStatement SEMICOLON;
 			|
-			IF LPAREN Condition RPAREN Statement 
-
-
+			READ LPAREN Designator RPAREN SEMICOLON;
+			|
+			PRINT LPAREN Expr NumConstOpt RPAREN SEMICOLON;
+			|
+			LBRACE StatementList RBRACE
+			;
 
 
 StatementList ::= (Statements) StatementList Statement
@@ -128,55 +109,106 @@ StatementList ::= (Statements) StatementList Statement
 				(NoStmt) /* epsilon */
 				;
 				
-Statement ::= (MatchedStmt) Matched
-		   |
-		   (UnmatchedStmt) Unmatched
-		   ; 
 
-Unmatched ::= (UnmatchedIf) IF Expr Statement
-		 	|
-		 	(UnmatchedIfElse) IF Expr Matched ELSE Unmatched
-		 	;
-		 
 
-Matched ::= (Assignment) Designator:dest EQUAL Expr:e SEMI
-		   |
-		   (ErrorStmt) error SEMI:l
-		   {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :}
-		   |
-		   (PrintStmt) PRINT LPAREN Expr RPAREN SEMI
-		   |
-		   (ReturnExpr) RETURN Expr:t SEMI
-		   |
-		   (ReturnNoExpr) RETURN SEMI
-		   |
-		   (MatchedStatement) IF Expr Matched ELSE Matched
-		   ;
+NumConstOpt ::= COMMA NUMBER
+			|
+			/* epsilon */
+			;
+
+
+DesignatorStatement ::= Designator ASSIGNMENT Expr
+					|
+					Designator INC
+					|
+					Designator DEC
+					;
+
+Expr ::= OptMinus Term AddOpTermList;
+
+OptMinus::= MINUS
+		|
+		/* epsilon */
+		;
+		
+AddOpTermList ::= AddOpTermList AddOpTerm
+				|
+				/* epsilon */
+				;
+				
+AddOpTerm ::= Addop Term;
+
+Term ::= Factor MulOpFactorList;
+
+MulOpFactorList ::= MulOpFactorList MulOpFactor
+				|
+				/* epsilon */
+				;
+				
+MulOpFactor ::= MulOp Factor;
+
+Factor ::= Designator
+		|
+		NUMBER
+		|
+		CHAR_CONST
+		|
+		BOOL_CONST
+		|
+		NEW Type LSQUARE Expr RSQUARE
+		|
+		LPAREN Expr RPAREN
+		;
+		
+Designator ::= IDENT DesignatorOptList;
+
+DesignatorOptList ::= DesignatorOptList DesignatorOpt
+					|
+					/* epsilon */
+					;
+
+DesignatorOpt ::= DOT IDENT
+				|
+				LSQUARE Expr RSQUARE
+				;
+
+Label ::= IDENT;
+
+Relop ::= EQUAL
+		|
+		NOT_EQUAL
+		|
+		GREATER
+		|
+		GREATER_EQUAL
+		|
+		LESS
+		|
+		LESS_EQUAL
+		;
+		
+AddOp ::= PLUS
+		|
+		MINUS
+		;
+		
+MulOp ::= MUL
+		|
+		DIV
+		|
+		MOD
+		;
+
+
+
+
+
 			
 Expr ::= (AddExpr) Expr:te Addop Term:t
 	 |
 	 (TermExpr) Term:t
 	 ;
 
-Term ::= (Term) Factor:t;
-
-Factor ::= (Const) NUMBER
-		|
-		(Var) Designator:d
-		| 
-		(FuncCall) Designator:func LPAREN ActualPars RPAREN
-		;
-		
-ActualPars ::= (Actuals) ActualParamList
-			|
-			(NoActuals) /* epsilon */
-			;
-		
-ActualParamList ::= (ActualParams) ActualParamList COMMA Expr
-				|
-				(ActualParam) Expr
-				;
-				
 Designator ::= (Designator) IDENT:name;
 
 Addop ::= (Addop) PLUS;
