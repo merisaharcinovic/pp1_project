@@ -1,0 +1,213 @@
+
+
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+parser code {:
+
+	Logger log = Logger.getLogger(getClass());
+        
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+
+
+:}
+
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+terminal PROG, CONST, VOID, READ, PRINT, NEW, FINDANY;
+terminal SEMICOLON, COMMA, DOT;
+terminal ASSIGNMENT, MINUS, PLUS, MUL, DIV, MOD, INC, DEC;
+terminal Integer NUMBER;
+terminal Character CHAR_CONST;
+terminal Boolean BOOL_CONST;
+terminal String IDENT;
+terminal LBRACE, RBRACE, LPAREN, RPAREN, LSQUARE, RSQUARE;
+
+terminal EXTENDS, COLON, ELSE, IF, NOT_EQUAL, AND, EQUAL, LESS, LAMBDA, BREAK, GREATER, WHILE, GREATER_EQUAL, LESS_EQUAL, FOREACH, CLASS, RETURN, CONTINUE, OR;
+
+
+nonterminal Program, Type;
+nonterminal DeclList, Decl;
+nonterminal MethodDeclList, MethodDecl;
+nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
+nonterminal VarDecl, VarList, VarOne, VarDeclList;
+nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, Designator, DesignatorOptList, DesignatorOpt; 
+nonterminal AssignOp, AddOp, MulOp;
+nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, Expr, OptMinus;
+
+
+Program ::= (Program) PROG IDENT:progName DeclList LBRACE MethodDeclList RBRACE;
+
+DeclList ::= (DeclarationList) DeclList Decl
+		|
+		(NoDeclList) /* epsilon */
+		;
+
+Decl ::= (PConstDecl) ConstDecl 
+		| 
+		(PVarDecl)  VarDecl
+		;
+
+
+ConstDecl ::=(ConstDecl) CONST Type ConstDeclList SEMICOLON;
+
+ConstDeclList ::= (ConstDeclListMore) ConstDeclList COMMA ConstDeclOne
+				|
+				(ConsDeclListOne) ConstDeclOne
+				;
+				
+ConstDeclOne ::=(ConstNumber) IDENT AssignOp NUMBER
+			|
+			(ConstChar) IDENT AssignOp CHAR_CONST
+			|
+			(ConstBool) IDENT AssignOp BOOL_CONST
+			;
+			
+				
+VarDecl::= (VarDecl) Type VarList SEMICOLON;
+
+VarList::=(VarListMore) VarList COMMA VarOne
+		|
+		(VarListOne) VarOne
+		;
+
+VarOne::= (VarOneArray) IDENT LSQUARE RSQUARE
+		| 
+		(VarOneVar) IDENT
+		;
+		
+VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
+			|
+			(NoVarDeclList) /* epsilon */
+			;
+
+
+Type ::= (Type) IDENT:typeName;
+
+MethodDecl ::=(MethodDecl) VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
+
+MethodDeclList ::=(MethodDecls) MethodDeclList MethodDecl
+				|
+				(NoMethodDecls)  /* epsilon */
+				;
+
+
+Statement ::= (StatementDesignator) DesignatorStatement SEMICOLON
+			|
+			(StatementRead) READ LPAREN Designator RPAREN SEMICOLON
+			|
+			(StatementPrint) PRINT LPAREN Expr NumConstOpt RPAREN SEMICOLON
+			|
+			(ListOfStatements) LBRACE StatementList RBRACE
+			|
+			(StatementFindAny) Designator AssignOp Designator DOT FINDANY LPAREN Expr RPAREN SEMICOLON
+			;
+
+
+StatementList ::= (Statements) StatementList Statement
+				|
+				(NoStmt) /* epsilon */
+				;
+				
+
+
+NumConstOpt ::= (NumConst) COMMA NUMBER
+			|
+			(NoNumConst) /* epsilon */
+			;
+
+
+DesignatorStatement ::=(DesignatorAssign) Designator AssignOp Expr
+					|
+					(DesignatorInc) Designator INC
+					|
+					(DesignatorDec) Designator DEC
+					;
+
+Expr ::=(ExprPositive) Term AddOpTermList
+		|
+		(ExprNegative) MINUS Term AddOpTermList
+		;
+
+		
+AddOpTermList ::=(AddOpTerms) AddOpTermList AddOpTerm
+				|
+				(NoAddOpTerms) /* epsilon */
+				;
+				
+AddOpTerm ::=(AddOpTerm) AddOp Term;
+
+Term ::=(Term) Factor MulOpFactorList;
+
+MulOpFactorList ::=(MulOpFactors) MulOpFactorList MulOpFactor
+				|
+				(NoMulOpFactors)/* epsilon */
+				;
+				
+MulOpFactor ::=(MulOpFactor) MulOp Factor;
+
+Factor ::=(FactorDesignator) Designator
+		|
+		(FactorNumber) NUMBER
+		|
+		(FactorChar) CHAR_CONST
+		|
+		(FactorBool) BOOL_CONST
+		|
+		(FactorNewExpr) NEW Type LSQUARE Expr RSQUARE
+		|
+		(FactorExpr) LPAREN Expr RPAREN
+		;
+		
+Designator ::= (DesignatorOne) IDENT
+			|
+			(DesignatorExpr) Designator LSQUARE Expr RSQUARE
+			;
+
+Label ::=(Label) IDENT;
+
+AssignOp ::=(Assignment) ASSIGNMENT;
+
+		
+AddOp ::=(Plus) PLUS
+		|
+		(Minus) MINUS
+		;
+		
+MulOp ::=(Mul) MUL
+		|
+		(Div) DIV
+		|
+		(Mod) MOD
+		;
+
+
+		
+
