@@ -53,7 +53,6 @@ terminal LBRACE, RBRACE, LPAREN, RPAREN, LSQUARE, RSQUARE;
 terminal EXTENDS, COLON, ELSE, IF, NOT_EQUAL, AND, EQUAL, LESS, LAMBDA, BREAK, GREATER, WHILE, GREATER_EQUAL, LESS_EQUAL, FOREACH, CLASS, RETURN, CONTINUE, OR;
 
 
-nonterminal Program, Type;
 nonterminal DeclList, Decl;
 nonterminal MethodDeclList, MethodDecl;
 nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
@@ -61,9 +60,12 @@ nonterminal VarDecl, VarList, VarOne, VarDeclList;
 nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, Designator, DesignatorOptList, DesignatorOpt; 
 nonterminal AssignOp, AddOp, MulOp;
 nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, Expr, OptMinus;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
-Program ::= (Program) PROG IDENT:progName DeclList LBRACE MethodDeclList RBRACE;
+Program ::= (Program) PROG ProgName:p DeclList LBRACE MethodDeclList RBRACE;
+ProgName::=(ProgName) IDENT:progName;
 
 DeclList ::= (DeclarationList) DeclList Decl
 		|
@@ -91,16 +93,16 @@ ConstDeclOne ::=(ConstNumber) IDENT AssignOp NUMBER
 			;
 			
 				
-VarDecl::= (VarDecl) Type VarList SEMICOLON;
+VarDecl::= (VarDecl) Type:varType VarList SEMICOLON;
 
 VarList::=(VarListMore) VarList COMMA VarOne
 		|
 		(VarListOne) VarOne
 		;
 
-VarOne::= (VarOneArray) IDENT LSQUARE RSQUARE
+VarOne::= (VarOneArray) IDENT:name LSQUARE RSQUARE
 		| 
-		(VarOneVar) IDENT
+		(VarOneVar) IDENT:name
 		;
 		
 VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
@@ -112,6 +114,11 @@ VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
 Type ::= (Type) IDENT:typeName;
 
 MethodDecl ::=(MethodDecl) VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
+
+MethodDeclList ::=(MethodDecls) MethodDeclList MethodDecl
+				|
+				(NoMethodDecls)  /* epsilon */
+				;
 
 
 Statement ::= (StatementDesignator) DesignatorStatement SEMICOLON
@@ -146,14 +153,11 @@ DesignatorStatement ::=(DesignatorAssign) Designator AssignOp Expr
 					(DesignatorDec) Designator DEC
 					;
 
-Expr ::=(Expr) OptMinus Term AddOpTermList;
-
-OptMinus::=(Negative) MINUS
+Expr ::=(ExprPositive) Term AddOpTermList
 		|
-		(Positive) /* epsilon */
+		(ExprNegative) MINUS Term AddOpTermList
 		;
-		
-		
+
 		
 AddOpTermList ::=(AddOpTerms) AddOpTermList AddOpTerm
 				|
@@ -184,17 +188,10 @@ Factor ::=(FactorDesignator) Designator
 		(FactorExpr) LPAREN Expr RPAREN
 		;
 		
-Designator ::= (Designator) IDENT DesignatorOptList;
-
-DesignatorOptList ::=(DesignatorOpts) DesignatorOptList DesignatorOpt
-					|
-					(NoDesignatorOpts)/* epsilon */
-					;
-
-DesignatorOpt ::=(DesignatorOptDot) DOT IDENT
-				|
-				(DesignatorOptExpr) LSQUARE Expr RSQUARE
-				;
+Designator ::= (DesignatorOne) IDENT
+			|
+			(DesignatorExpr) Designator LSQUARE Expr RSQUARE
+			;
 
 Label ::=(Label) IDENT;
 

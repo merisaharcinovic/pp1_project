@@ -53,8 +53,6 @@ terminal LBRACE, RBRACE, LPAREN, RPAREN, LSQUARE, RSQUARE;
 terminal EXTENDS, COLON, ELSE, IF, NOT_EQUAL, AND, EQUAL, LESS, LAMBDA, BREAK, GREATER, WHILE, GREATER_EQUAL, LESS_EQUAL, FOREACH, CLASS, RETURN, CONTINUE, OR;
 
 
-nonterminal Program Program;
-nonterminal Type Type;
 nonterminal DeclList DeclList;
 nonterminal Decl Decl;
 nonterminal MethodDeclList MethodDeclList;
@@ -85,9 +83,12 @@ nonterminal MulOpFactor MulOpFactor;
 nonterminal Label Label;
 nonterminal Expr Expr;
 nonterminal OptMinus OptMinus;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
-Program ::= (Program) PROG IDENT:progName DeclList:D1 LBRACE MethodDeclList:M2 RBRACE {: RESULT=new Program(progName, D1, M2); RESULT.setLine(progNameleft); :};
+Program ::= (Program) PROG ProgName:p DeclList:D1 LBRACE MethodDeclList:M2 RBRACE {: RESULT=new Program(p, D1, M2); RESULT.setLine(pleft); :};
+ProgName::=(ProgName) IDENT:progName {: RESULT=new ProgName(progName); RESULT.setLine(progNameleft); :};
 
 DeclList ::= (DeclarationList) DeclList:D1 Decl:D2 {: RESULT=new DeclarationList(D1, D2); RESULT.setLine(D1left); :}
 		|
@@ -115,16 +116,16 @@ ConstDeclOne ::=(ConstNumber) IDENT:I1 AssignOp:A2 NUMBER:N3 {: RESULT=new Const
 			;
 			
 				
-VarDecl::= (VarDecl) Type:T1 VarList:V2 SEMICOLON {: RESULT=new VarDecl(T1, V2); RESULT.setLine(T1left); :};
+VarDecl::= (VarDecl) Type:varType VarList:V1 SEMICOLON {: RESULT=new VarDecl(varType, V1); RESULT.setLine(varTypeleft); :};
 
 VarList::=(VarListMore) VarList:V1 COMMA VarOne:V2 {: RESULT=new VarListMore(V1, V2); RESULT.setLine(V1left); :}
 		|
 		(VarListOne) VarOne:V1 {: RESULT=new VarListOne(V1); RESULT.setLine(V1left); :}
 		;
 
-VarOne::= (VarOneArray) IDENT:I1 LSQUARE RSQUARE {: RESULT=new VarOneArray(I1); RESULT.setLine(I1left); :}
+VarOne::= (VarOneArray) IDENT:name LSQUARE RSQUARE {: RESULT=new VarOneArray(name); RESULT.setLine(nameleft); :}
 		| 
-		(VarOneVar) IDENT:I1 {: RESULT=new VarOneVar(I1); RESULT.setLine(I1left); :}
+		(VarOneVar) IDENT:name {: RESULT=new VarOneVar(name); RESULT.setLine(nameleft); :}
 		;
 		
 VarDeclList ::= (VarDeclarationList) VarDeclList:V1 VarDecl:V2 {: RESULT=new VarDeclarationList(V1, V2); RESULT.setLine(V1left); :}
@@ -136,6 +137,11 @@ VarDeclList ::= (VarDeclarationList) VarDeclList:V1 VarDecl:V2 {: RESULT=new Var
 Type ::= (Type) IDENT:typeName {: RESULT=new Type(typeName); RESULT.setLine(typeNameleft); :};
 
 MethodDecl ::=(MethodDecl) VOID IDENT:I1 LPAREN RPAREN VarDeclList:V2 LBRACE StatementList:S3 RBRACE {: RESULT=new MethodDecl(I1, V2, S3); RESULT.setLine(I1left); :};
+
+MethodDeclList ::=(MethodDecls) MethodDeclList:M1 MethodDecl:M2 {: RESULT=new MethodDecls(M1, M2); RESULT.setLine(M1left); :}
+				|
+				(NoMethodDecls) {: RESULT=new NoMethodDecls(); :}  /* epsilon */
+				;
 
 
 Statement ::= (StatementDesignator) DesignatorStatement:D1 SEMICOLON {: RESULT=new StatementDesignator(D1); RESULT.setLine(D1left); :}
@@ -170,14 +176,11 @@ DesignatorStatement ::=(DesignatorAssign) Designator:D1 AssignOp:A2 Expr:E3 {: R
 					(DesignatorDec) Designator:D1 DEC {: RESULT=new DesignatorDec(D1); RESULT.setLine(D1left); :}
 					;
 
-Expr ::=(Expr) OptMinus:O1 Term:T2 AddOpTermList:A3 {: RESULT=new Expr(O1, T2, A3); RESULT.setLine(O1left); :};
-
-OptMinus::=(Negative) MINUS {: RESULT=new Negative(); :}
+Expr ::=(ExprPositive) Term:T1 AddOpTermList:A2 {: RESULT=new ExprPositive(T1, A2); RESULT.setLine(T1left); :}
 		|
-		(Positive) {: RESULT=new Positive(); :} /* epsilon */
+		(ExprNegative) MINUS Term:T1 AddOpTermList:A2 {: RESULT=new ExprNegative(T1, A2); RESULT.setLine(T1left); :}
 		;
-		
-		
+
 		
 AddOpTermList ::=(AddOpTerms) AddOpTermList:A1 AddOpTerm:A2 {: RESULT=new AddOpTerms(A1, A2); RESULT.setLine(A1left); :}
 				|
@@ -208,17 +211,10 @@ Factor ::=(FactorDesignator) Designator:D1 {: RESULT=new FactorDesignator(D1); R
 		(FactorExpr) LPAREN Expr:E1 RPAREN {: RESULT=new FactorExpr(E1); RESULT.setLine(E1left); :}
 		;
 		
-Designator ::= (Designator) IDENT:I1 DesignatorOptList:D2 {: RESULT=new Designator(I1, D2); RESULT.setLine(I1left); :};
-
-DesignatorOptList ::=(DesignatorOpts) DesignatorOptList:D1 DesignatorOpt:D2 {: RESULT=new DesignatorOpts(D1, D2); RESULT.setLine(D1left); :}
-					|
-					(NoDesignatorOpts) {: RESULT=new NoDesignatorOpts(); :}/* epsilon */
-					;
-
-DesignatorOpt ::=(DesignatorOptDot) DOT IDENT:I1 {: RESULT=new DesignatorOptDot(I1); RESULT.setLine(I1left); :}
-				|
-				(DesignatorOptExpr) LSQUARE Expr:E1 RSQUARE {: RESULT=new DesignatorOptExpr(E1); RESULT.setLine(E1left); :}
-				;
+Designator ::= (DesignatorOne) IDENT:I1 {: RESULT=new DesignatorOne(I1); RESULT.setLine(I1left); :}
+			|
+			(DesignatorExpr) Designator:D1 LSQUARE Expr:E2 RSQUARE {: RESULT=new DesignatorExpr(D1, E2); RESULT.setLine(D1left); :}
+			;
 
 Label ::=(Label) IDENT:I1 {: RESULT=new Label(I1); RESULT.setLine(I1left); :};
 
