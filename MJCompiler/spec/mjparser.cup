@@ -57,10 +57,10 @@ nonterminal DeclList, Decl;
 nonterminal MethodDeclList;
 nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
 nonterminal VarDecl, VarList, VarOne, VarDeclList;
-nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, Designator, DesignatorOptList, DesignatorOpt; 
+nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, DesignatorOptList, DesignatorOpt; 
 nonterminal AssignOp, AddOp, MulOp;
-nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, Expr, OptMinus;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName;
+nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, OptMinus;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName, Designator, Expr;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
@@ -190,7 +190,7 @@ Factor ::=(FactorDesignator) Designator
 		(FactorExpr) LPAREN Expr RPAREN
 		;
 		
-Designator ::= (DesignatorOne) IDENT
+Designator ::= (DesignatorOne) IDENT:name
 			|
 			(DesignatorExpr) Designator LSQUARE Expr RSQUARE
 			;
