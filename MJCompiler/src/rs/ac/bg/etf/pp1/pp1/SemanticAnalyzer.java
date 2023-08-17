@@ -42,6 +42,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		printCount++;
 	}
 
+    //Program 
+    
     public void visit(ProgName progName) {
     	progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
     	Tab.openScope();
@@ -55,6 +57,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
     
     
+    //Type
+
     public void visit(Type type){
     	Obj typeNode = Tab.find(type.getTypeName());
     	if(typeNode == Tab.noObj){
@@ -70,6 +74,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		}
     	}
     }
+    
+    //VarOne
     
     public void visit(VarOneVar oneVar){
 		varDeclCount++;
@@ -98,7 +104,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 	}
     
-	//deklaracija CONST 
+	//ConstDeclOne
 	
     public void visit(ConstNumber constNumber) {
     	Obj found = Tab.find(constNumber.getName());
@@ -158,7 +164,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
     
     
-    //methodDecl
+    //MethodDecl
     
     public void visit(MethodDecl methodDecl){
 		varDeclCount++;
@@ -180,6 +186,38 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		report_error("Greska: Identifikator " + methodName.getName() + " nije main!", methodName);	
     	}
 		
+	}
+    
+    
+    //Designator
+    
+    public void visit(DesignatorOne designatorOne){
+    	Obj found = Tab.find(designatorOne.getName());
+    	
+    	if(found == Tab.noObj) {
+    		report_error("Greska: Ime " + designatorOne.getName() + " nije deklarisano!", designatorOne);	
+    	}
+    	else {
+    		designatorOne.obj= found;
+    	}
+    	
+    }
+    
+    public void visit(DesignatorExpr designatorExpr){
+    	Obj designator = designatorExpr.getDesignator().obj;
+    	Obj expr = designatorExpr.getExpr().obj;
+
+    	//provera da li je designator tipa niz
+    	if(designator.getType().getKind()!=Struct.Array) {
+    		report_error("Greska: Identifikator " + designator.getName() + " nije tipa niz!", designatorExpr);	
+    	}
+    	else {
+    		//provera da li je expr int
+    		if(expr.getType().getKind()!=Struct.Int) {
+        		report_error("Greska: Identifikator " + expr.getName() + " nije tipa int!", designatorExpr);	
+        	}
+    	}
+    	
 	}
     
     
