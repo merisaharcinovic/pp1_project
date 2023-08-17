@@ -54,13 +54,13 @@ terminal EXTENDS, COLON, ELSE, IF, NOT_EQUAL, AND, EQUAL, LESS, LAMBDA, BREAK, G
 
 
 nonterminal DeclList, Decl;
-nonterminal MethodDeclList, MethodDecl;
+nonterminal MethodDeclList;
 nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
 nonterminal VarDecl, VarList, VarOne, VarDeclList;
 nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, Designator, DesignatorOptList, DesignatorOpt; 
 nonterminal AssignOp, AddOp, MulOp;
 nonterminal AddOpTermList, AddOpTerm, Term, Factor, MulOpFactorList, MulOpFactor, Label, Expr, OptMinus;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
@@ -85,11 +85,11 @@ ConstDeclList ::= (ConstDeclListMore) ConstDeclList COMMA ConstDeclOne
 				(ConsDeclListOne) ConstDeclOne
 				;
 				
-ConstDeclOne ::=(ConstNumber) IDENT AssignOp NUMBER
+ConstDeclOne ::=(ConstNumber) IDENT:name AssignOp NUMBER:value
 			|
-			(ConstChar) IDENT AssignOp CHAR_CONST
+			(ConstChar) IDENT:name AssignOp CHAR_CONST:value
 			|
-			(ConstBool) IDENT AssignOp BOOL_CONST
+			(ConstBool) IDENT:name AssignOp BOOL_CONST:value
 			;
 			
 				
@@ -113,7 +113,9 @@ VarDeclList ::= (VarDeclarationList) VarDeclList VarDecl
 
 Type ::= (Type) IDENT:typeName;
 
-MethodDecl ::=(MethodDecl) VOID IDENT LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
+MethodDecl ::=(MethodDecl) VOID MethodName LPAREN RPAREN VarDeclList LBRACE StatementList RBRACE;
+
+MethodName ::=(MethodName) IDENT:name;
 
 MethodDeclList ::=(MethodDecls) MethodDeclList MethodDecl
 				|
