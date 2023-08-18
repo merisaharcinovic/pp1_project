@@ -15,6 +15,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	boolean hasMain=false;
 	
 	Struct currentType = null;
+	Struct boolType;
+	
+	public SemanticAnalyzer() {
+		boolType = Tab.insert(Obj.Type, "bool", new Struct(Struct.Bool)).getType();
+	}
 
 	
 	Logger log = Logger.getLogger(getClass());
@@ -150,7 +155,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		}
     		else {
         		Obj constBoolNode = Tab.insert(Obj.Con, constBool.getName(), Tab.intType);
-        		int value = constBool.getValue().equals("true") ? 1 : 0;
+        		int value = constBool.getValue().equals(true) ? 1 : 0;
         		constBoolNode.setAdr(value);
         		report_info("Deklarisana BOOLEAN konstanta: " + constBool.getName() + "= " + constBool.getValue(), constBool);
 
@@ -195,7 +200,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		report_error("Greska: Ime " + designatorOne.getName() + " nije deklarisano!", designatorOne);	
     	}
     	else {
-    		report_info("Detektovano koriscenje promenljive" + designatorOne.getName(), designatorOne);
+
+    		report_info("Detektovano koriscenje promenljive " + designatorOne.getName(), designatorOne);
     		designatorOne.obj= found;
     	}
     	
@@ -216,7 +222,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		designatorExpr.obj=Tab.noObj;
     	}
     	else {
-    		report_info("Detektovano koriscenje promenljive" + designator.getName(), designatorExpr);
+    		report_info("Detektovano koriscenje promenljive " + designator.getName(), designatorExpr);
     		designatorExpr.obj = new Obj(Obj.Elem, "", designator.getType().getElemType());
             
     	}
@@ -270,10 +276,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	//Expr type kompatibilan sa designator type?
     	
     	if(designator.getKind()==Obj.Elem || designator.getKind()==Obj.Var) {
-    		report_info("Detektovano koriscenje promenljive" + designator.getName(), designatorAssign);
+    		report_info("test1 " + designator.getName(), designatorAssign);
+
+    		report_info("Detektovano koriscenje promenljive " + designator.getName(), designatorAssign);
 
     	}
     	else {
+    		report_error("test", null);
     		report_error("Greska: Na levoj strani jednakosti mora biti promenljiva ili element niza. ", designatorAssign);	
 
     	}
@@ -323,7 +332,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	if(term.getKind()!=Struct.Int) {
     		report_error("Greska: Negativni clan mora biti tipa int.", expr);	
     	}
-//    	
     }
     
     
