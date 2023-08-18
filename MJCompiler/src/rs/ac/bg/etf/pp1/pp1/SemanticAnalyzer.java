@@ -37,10 +37,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 
 	
-	
-    public void visit(StatementPrint print) {
-		printCount++;
-	}
+
 
     //Program 
     
@@ -198,6 +195,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		report_error("Greska: Ime " + designatorOne.getName() + " nije deklarisano!", designatorOne);	
     	}
     	else {
+    		report_info("Detektovano koriscenje promenljive" + designatorOne.getName(), designatorOne);
     		designatorOne.obj= found;
     	}
     	
@@ -218,6 +216,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		designatorExpr.obj=Tab.noObj;
     	}
     	else {
+    		report_info("Detektovano koriscenje promenljive" + designator.getName(), designatorExpr);
     		designatorExpr.obj = new Obj(Obj.Elem, "", designator.getType().getElemType());
             
     	}
@@ -230,10 +229,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	Obj designator = designatorInc.getDesignator().obj;
     	
     	if(designator.getType().getKind()!=Struct.Int) {
-    		report_error("Greska: Operand koji se inkrementira mora biti tipa Int. ", designatorInc);
+    		report_error("Greska: Operand koji se inkrementira mora biti tipa int. ", designatorInc);
 		}
     	if(designator.getKind()!=Obj.Elem && designator.getKind()!=Obj.Var) {
-    		report_error("Greska: Operand koji se inkrementira mora oznacavati promeljivu ili element niza. ", designatorInc);	
+    		report_error("Greska: Operand koji se inkrementira mora oznacavati promenljivu ili element niza. ", designatorInc);	
     	}
     	else {
     		report_info("Inkrementiranje promenljive: " + designator.getName(), designatorInc);
@@ -249,11 +248,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	Obj designator = designatorDec.getDesignator().obj;
     	
     	if(designator.getType()!=Tab.intType) {
-    		report_error("Greska: Operand koji se dekrementira mora biti tipa Int. ", designatorDec);
+    		report_error("Greska: Operand koji se dekrementira mora biti tipa int. ", designatorDec);
 		}
 
     	if(designator.getKind()!=Obj.Elem && designator.getKind()!=Obj.Var) {
-    		report_error("Greska: Operand koji se dekrementira mora oznacavati promeljivu ili element niza. ", designatorDec);	
+    		report_error("Greska: Operand koji se dekrementira mora oznacavati promenljivu ili element niza. ", designatorDec);	
     	}
     	else {
     		report_info("Dekrementiranje promenljive: " + designator.getName(), designatorDec);
@@ -271,15 +270,61 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	//Expr type kompatibilan sa designator type?
     	
     	if(designator.getKind()==Obj.Elem || designator.getKind()==Obj.Var) {
-    		
+    		report_info("Detektovano koriscenje promenljive" + designator.getName(), designatorAssign);
+
     	}
     	else {
-    		report_error("Greska: Na levoj strani jednakosti mora biti promeljiva ili element niza. ", designatorAssign);	
+    		report_error("Greska: Na levoj strani jednakosti mora biti promenljiva ili element niza. ", designatorAssign);	
 
     	}
     	
     }
     
+    
+    //Factor
+    
+    public void visit(FactorNewExpr factorNew){
+    	
+    	Obj expr = factorNew.getExpr().obj;
+    	if(expr.getType().getKind()!=Struct.Int) {
+    		report_error("Greska: Izraz unutar [] mora biti tipa int!", factorNew);	
+    	}
+    	
+    }
+    
+    //Statement
+    
+    public void visit(StatementRead readStmt){
+    	
+    	Obj designator = readStmt.getDesignator().obj;
+    	if(designator.getKind()!=Obj.Elem && designator.getKind()!=Obj.Var) {
+    		report_error("Greska: Element unutar read() mora oznacavati promenljivu ili element niza.", readStmt);	
+    	}
+    	if(designator.getType()!=Tab.intType && designator.getType()!=Tab.charType && designator.getType().getKind()!=Struct.Bool   ) {
+    		report_error("Greska: Element unutar read() mora biti tipa int, char ili bool.", readStmt);
+		}
+    	
+    }
+    
+    public void visit(StatementPrint printStmt){
+    	printCount++;
+    	
+    	Obj expr = printStmt.getExpr().obj;
+    	if(expr.getType().getKind()!=Struct.Int && expr.getType().getKind()!=Struct.Char && expr.getType().getKind()!=Struct.Bool) {
+    		report_error("Greska: Izraz unutar print() mora biti tipa int, char ili bool.", printStmt);	
+    	}
+    	
+    }
+    
+    //Expr
+    
+    public void visit(ExprNegative expr){
+    	Struct term = expr.getTerm().struct;
+    	if(term.getKind()!=Struct.Int) {
+    		report_error("Greska: Negativni clan mora biti tipa int.", expr);	
+    	}
+//    	
+    }
     
     
 
