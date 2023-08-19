@@ -234,7 +234,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	
     	Obj designator = designatorInc.getDesignator().obj;
     	
-    	if(designator.getType().getKind()!=Struct.Int) {
+    	if(!isInt(designator.getType())) {
     		report_error("Greska: Operand koji se inkrementira mora biti tipa int. ", designatorInc);
 		}
     	if(designator.getKind()!=Obj.Elem && designator.getKind()!=Obj.Var) {
@@ -253,7 +253,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	
     	Obj designator = designatorDec.getDesignator().obj;
     	
-    	if(designator.getType()!=Tab.intType) {
+    	if(!isInt(designator.getType())) {
     		report_error("Greska: Operand koji se dekrementira mora biti tipa int. ", designatorDec);
 		}
 
@@ -289,29 +289,80 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	
     }
     
+    //Term
+    
+    public void visit(TermFactor term){
+    	term.obj = term.getFactor().obj;
+    	
+    }
+    
+    public void visit(TermMul termMul){
+    	Struct factorType = termMul.getFactor().obj.getType();
+        Struct termType = termMul.getTerm().obj.getType();
+        
+        if(compatibleInts(factorType, termType)) {
+        	termMul.obj=termMul.getTerm().obj;
+        }
+        else {
+    		report_error("Greska: Tipovi u izrazu nisu kompatibilni. ", termMul);	
+    		termMul.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
+        }
+        
+    }
     
     //Factor
     
     public void visit(FactorNewExpr factorNew){
     	
     	Obj expr = factorNew.getExpr().obj;
-    	if(expr.getType().getKind()!=Struct.Int) {
+    	if(!isInt(expr.getType())) {
     		report_error("Greska: Izraz unutar [] mora biti tipa int!", factorNew);	
     	}
     	
     }
     
+    public void visit(FactorDesignator factorDesignator){
+    	
+    	
+    }
+    
+    public void visit(FactorNumber factorNumber){
+    	
+    	
+    }
+    
+    public void visit(FactorChar factorChar){
+    	
+    	
+    }
+	public void visit(FactorBool factorBool){
+	    	
+	    	
+	}
+	public void visit(FactorExpr factorExpr){
+		
+		
+	}
+	    
     //Statement
     
     public void visit(StatementRead readStmt){
     	
+    	boolean error=false;
     	Obj designator = readStmt.getDesignator().obj;
     	if(designator.getKind()!=Obj.Elem && designator.getKind()!=Obj.Var) {
     		report_error("Greska: Element unutar read() mora oznacavati promenljivu ili element niza.", readStmt);	
+    		error=true;
     	}
-    	if(designator.getType()!=Tab.intType && designator.getType()!=Tab.charType && designator.getType().getKind()!=Struct.Bool   ) {
+    	if(!isInt(designator.getType()) &&!isChar(designator.getType()) && !isBool(designator.getType())   ) {
     		report_error("Greska: Element unutar read() mora biti tipa int, char ili bool.", readStmt);
-		}
+    		error = true;
+    	}
+    	if(!error) {
+            report_info("Detektovan poziv funkcije read ", readStmt);
+
+    	}
+    	
     	
     }
     
@@ -319,8 +370,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	printCount++;
     	
     	Obj expr = printStmt.getExpr().obj;
-    	if(expr.getType().getKind()!=Struct.Int && expr.getType().getKind()!=Struct.Char && expr.getType().getKind()!=Struct.Bool) {
+    	if(!isInt(expr.getType()) && !isChar(expr.getType()) && !isBool(expr.getType())) {
     		report_error("Greska: Izraz unutar print() mora biti tipa int, char ili bool.", printStmt);	
+    	}
+    	else {
+            report_info("Detektovan poziv funkcije print ", printStmt);
     	}
     	
     }
@@ -328,12 +382,55 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     //Expr
     
     public void visit(ExprNegative expr){
-    	Struct term = expr.getTerm().struct;
-    	if(term.getKind()!=Struct.Int) {
+    	Struct termType = expr.getTerm().obj.getType();
+    	if(!isInt(termType)) {
     		report_error("Greska: Negativni clan mora biti tipa int.", expr);	
+    		expr.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
+    	}
+    	else {
+    		expr.obj=expr.getTerm().obj;
     	}
     }
     
+    public void visit(ExprPositive expr){
+    	expr.obj=expr.getTerm().obj;
+    }
+    
+    
+    public void visit(ExprAdd exprAdd){
+    	Struct exprType = exprAdd.getExpr().obj.getType();
+        Struct termType = exprAdd.getTerm().obj.getType();
+        
+        if(compatibleInts(exprType, termType)) {
+        	exprAdd.obj=exprAdd.getExpr().obj;
+        }
+        else {
+    		report_error("Greska: Tipovi u izrazu nisu kompatibilni. ", exprAdd);	
+    		exprAdd.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
+        }
+        
+    }
+    
+    
+    
+    
+    public boolean compatibleInts(Struct str1, Struct str2){
+    	return (isInt(str1) && isInt(str2));
+    }
+
+	private boolean isInt(Struct str1) {
+		return (str1.getKind()==Struct.Int || 
+				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Int));
+	}
+	
+	private boolean isChar(Struct str1) {
+		return (str1.getKind()==Struct.Char || 
+				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Char));
+	}
+	private boolean isBool(Struct str1) {
+		return (str1.getKind()==Struct.Bool || 
+				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Bool));
+	}
     
 
 }
