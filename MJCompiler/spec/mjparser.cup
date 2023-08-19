@@ -60,8 +60,9 @@ nonterminal VarDecl, VarList, VarOne, VarDeclList;
 nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, DesignatorOptList, DesignatorOpt; 
 nonterminal AssignOp, AddOp, MulOp;
 nonterminal Label, OptMinus;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName, Designator, Expr;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor;
+nonterminal VarDeclError, VarErrorList, DesignatorAssignOpError;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName, Designator, Expr, Term, Factor;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
 Program ::= (Program) PROG ProgName:p DeclList LBRACE MethodDeclList RBRACE;
@@ -93,12 +94,24 @@ ConstDeclOne ::=(ConstNumber) IDENT:name AssignOp NUMBER:value
 			;
 			
 				
-VarDecl::= (VarDecl) Type:varType VarList SEMICOLON;
+VarDecl::= (VarDeclaration) Type:varType VarList SEMICOLON
+		| 
+		(VarDeclErrorSemi) Type:varType VarDeclError SEMICOLON
+		;
+		
+VarDeclError ::= (VarDeclError)  error:e
+						{: parser.report_error("Izvrsen oporavak u liniji " + eleft, null); :};
 
 VarList::=(VarListMore) VarList COMMA VarOne
 		|
 		(VarListOne) VarOne
+		|
+		(VarListError) VarErrorList COMMA VarOne
 		;
+		
+VarErrorList ::= (VarErrorList)  error:e
+						{: parser.report_error("Izvrsen oporavak u liniji " + eleft, null); :};
+
 
 VarOne::= (VarOneArray) IDENT:name LSQUARE RSQUARE
 		| 
@@ -153,7 +166,13 @@ DesignatorStatement ::=(DesignatorAssign) Designator AssignOp Expr
 					(DesignatorInc) Designator INC
 					|
 					(DesignatorDec) Designator DEC
+					|
+					(DesignatorStatementAssignError) Designator AssignOp DesignatorAssignOpError
 					;
+
+DesignatorAssignOpError ::= (DesignatorAssignOpError)  error:e
+						{: parser.report_error("Izvrsen oporavak u liniji " + eleft, null); :};
+					
 
 Expr ::=(ExprPositive) Term
 		|
@@ -173,11 +192,11 @@ Term ::=(TermFactor) Factor
 
 Factor ::=(FactorDesignator) Designator
 		|
-		(FactorNumber) NUMBER
+		(FactorNumber) NUMBER:value
 		|
-		(FactorChar) CHAR_CONST
+		(FactorChar) CHAR_CONST:value
 		|
-		(FactorBool) BOOL_CONST
+		(FactorBool) BOOL_CONST:value
 		|
 		(FactorNewExpr) NEW Type LSQUARE Expr RSQUARE
 		|
