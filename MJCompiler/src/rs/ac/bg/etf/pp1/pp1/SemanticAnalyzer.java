@@ -229,6 +229,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	
 	}
     
+    //DesignatorStatement
+    
     
     public void visit(DesignatorInc designatorInc){
     	
@@ -276,9 +278,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	//Expr type kompatibilan sa designator type?
     	
     	if(designator.getKind()==Obj.Elem || designator.getKind()==Obj.Var) {
-    		report_info("test1 " + designator.getName(), designatorAssign);
-
-    		report_info("Detektovano koriscenje promenljive " + designator.getName(), designatorAssign);
+//    		report_info("test1 " + designator.getName(), designatorAssign);
+//
+//    		report_info("Detektovano koriscenje promenljive " + designator.getName(), designatorAssign);
 
     	}
     	else {
@@ -317,34 +319,39 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	Obj expr = factorNew.getExpr().obj;
     	if(!isInt(expr.getType())) {
     		report_error("Greska: Izraz unutar [] mora biti tipa int!", factorNew);	
+    		factorNew.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
+    	}
+    	else {
+    		//factorNew.obj = new Obj(Obj.)
     	}
     	
     }
     
     public void visit(FactorDesignator factorDesignator){
-    	
+    	factorDesignator.obj=factorDesignator.getDesignator().obj;
     	
     }
     
     public void visit(FactorNumber factorNumber){
-    	
-    	
+    	factorNumber.obj = new Obj(Obj.Con, "", Tab.intType, factorNumber.getValue(), 1);
     }
-    
     public void visit(FactorChar factorChar){
-    	
-    	
+    	factorChar.obj = new Obj(Obj.Con, "", Tab.charType, factorChar.getValue(), 1);
     }
-	public void visit(FactorBool factorBool){
-	    	
-	    	
+	public void visit(FactorBool factorBool){	
+    	factorBool.obj = new Obj(Obj.Con, "", boolType, factorBool.getValue()?1:0, 1);
 	}
+	
 	public void visit(FactorExpr factorExpr){
-		
-		
+		factorExpr.obj=factorExpr.getExpr().obj;
 	}
 	    
     //Statement
+	
+	public void visit(StatementDesignator designatorStmt){
+    	
+    	
+    }
     
     public void visit(StatementRead readStmt){
     	
@@ -419,17 +426,17 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     }
 
 	private boolean isInt(Struct str1) {
-		return (str1.getKind()==Struct.Int || 
-				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Int));
+		return (str1.getKind()==Struct.Int );
+				//|| (str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Int));
 	}
 	
 	private boolean isChar(Struct str1) {
-		return (str1.getKind()==Struct.Char || 
-				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Char));
+		return (str1.getKind()==Struct.Char );
+				//|| (str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Char));
 	}
 	private boolean isBool(Struct str1) {
-		return (str1.getKind()==Struct.Bool || 
-				(str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Bool));
+		return (str1.getKind()==Struct.Bool );
+				//|| (str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Bool));
 	}
     
 
