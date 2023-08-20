@@ -162,7 +162,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         		report_error("Greska: Konstanta " + constBool.getName() + " nije ispravnog tipa", constBool);	
     		}
     		else {
-        		Obj constBoolNode = Tab.insert(Obj.Con, constBool.getName(), Tab.intType);
+        		Obj constBoolNode = Tab.insert(Obj.Con, constBool.getName(), boolType);
         		int value = constBool.getValue().equals(true) ? 1 : 0;
         		constBoolNode.setAdr(value);
         		report_info("Deklarisana boolean konstanta: " + constBool.getName() + "= " + constBool.getValue(), constBool);
