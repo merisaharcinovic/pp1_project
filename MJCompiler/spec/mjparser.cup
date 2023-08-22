@@ -8,6 +8,7 @@ import rs.ac.bg.etf.pp1.ast.*;
 
 parser code {:
 
+	boolean errorDetected;
 	Logger log = Logger.getLogger(getClass());
         
     public void report_fatal_error(String message, Object info) throws java.lang.Exception {
@@ -24,6 +25,7 @@ parser code {:
     }
 
     public void report_error(String message, Object info) {
+    	errorDetected = true;
     	StringBuilder msg = new StringBuilder(message); 
     	if (info instanceof Symbol)
             msg.append (" na liniji ").append(((Symbol)info).left);
@@ -31,6 +33,10 @@ parser code {:
     }
 
 
+:}
+
+init with {:
+	errorDetected = false;
 :}
 
 
@@ -66,7 +72,7 @@ nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
 Program ::= (Program) PROG ProgName:p DeclList LBRACE MethodDeclList RBRACE;
-ProgName::=(ProgName) IDENT:progName;
+ProgName ::=(ProgName) IDENT:progName;
 
 DeclList ::= (DeclarationList) DeclList Decl
 		|
@@ -155,7 +161,7 @@ StatementList ::= (Statements) StatementList Statement
 				
 
 
-NumConstOpt ::= (NumConst) COMMA NUMBER
+NumConstOpt ::= (NumConst) COMMA NUMBER:width
 			|
 			(NoNumConst) /* epsilon */
 			;
