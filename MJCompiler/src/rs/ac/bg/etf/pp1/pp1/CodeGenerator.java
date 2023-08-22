@@ -21,39 +21,36 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(StatementPrint printStmt){
-		if(printStmt.getExpr().obj.getType() == Tab.intType){
-			Code.loadConst(5);
+		if(printStmt.getExpr().obj.getType() == Tab.intType || printStmt.getExpr().obj.getType() == boolType){
+			if(printStmt.getNumConstOpt().getClass()==NoNumConst.class) {
+				Code.loadConst(5);
+			}
 			Code.put(Code.print);
 		}else{
-			Code.loadConst(1);
+			if(printStmt.getNumConstOpt().getClass()==NoNumConst.class) {
+				Code.loadConst(1);
+			}
 			Code.put(Code.bprint);
 		}
 	}
 	
+	public void visit(NumConst numConst){
+		Code.loadConst(numConst.getWidth());
+	}
+	
+	
 	public void visit(StatementRead readStmt){
 		Obj designator = readStmt.getDesignator().obj;
-        if (designator.getType() == Tab.intType) {
+        if (designator.getType() == Tab.intType || designator.getType() == boolType) {
             Code.put(Code.read);
         }
         else {
             Code.put(Code.bread);
         }
         
-        if(designator.getKind() == Obj.Elem) {
-        	if(designator.getType() == Tab.intType || designator.getType() == boolType) {
-        		Code.put(Code.astore);
-        	}
-        	else {
-                Code.put(Code.bastore);
-        	}
-        }
-        else {
-        	Code.store(designator);
-        }
+        Code.store(designator);
     }
-	public void visit(NumConst numConst){
-	}
-	
+
 	
 	public void visit(MethodName methodName){
 		
@@ -119,9 +116,54 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.store(assignment.getDesignator().obj);
 	}
 	
+	public void visit(DesignatorOne designatorOne){
+		Code.load(designatorOne.obj);
+	}
+	
+	public void visit(DesignatorExpr designatorExpr){
+		Code.load(designatorExpr.obj);
+
+    }
+	
+	public void visit(DesignatorInc designatorInc){
+		
+		Obj designator = designatorInc.getDesignator().obj;
+		if (designator.getKind() == Obj.Elem) {
+			Code.put(Code.dup2);
+		}
+		//designator
+		Code.load(designator);
+		//1
+		Code.loadConst(1);
+		//add
+        Code.put(Code.add);
+        //store
+        Code.store(designator);
+		
+		
+	}
+	
+	public void visit(DesignatorDec designatorDec){
+		Obj designator = designatorDec.getDesignator().obj;
+		if (designator.getKind() == Obj.Elem) {
+			Code.put(Code.dup2);
+		}
+		//designator
+		Code.load(designator);
+		//1
+		Code.loadConst(1);
+		//sub
+        Code.put(Code.sub);
+        //store
+        Code.store(designator);
+	}
+	
+	
+	
+
 	public void visit(FactorNewExpr factorNew){
         Code.put(Code.newarray);
-        if (factorNew.getType().struct == Tab.intType) {
+        if (factorNew.getType().struct == Tab.intType || factorNew.getType().struct == boolType) {
             Code.put(1);
         } else {
             Code.put(0);
