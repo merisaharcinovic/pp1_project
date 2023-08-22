@@ -13,6 +13,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	int varDeclCount = 0;
 	boolean errorDetected = false;
 	boolean hasMain=false;
+	int nVars;
 	
 	Struct currentType = null;
 
@@ -54,7 +55,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     
     public void visit(Program program) {
     	if(!hasMain) report_error("Greska: Nije pronadjena main metoda. ", null);
-
+    	
+    	nVars = Tab.currentScope.getnVars();
     	Tab.chainLocalSymbols(program.getProgName().obj);
     	Tab.closeScope();
 	}
@@ -177,14 +179,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     //MethodDecl
     
     public void visit(MethodDecl methodDecl){
-		varDeclCount++;
 		
 		Tab.chainLocalSymbols(methodDecl.getMethodName().obj);
     	Tab.closeScope();
 	}
     
     public void visit(MethodName methodName){
-		varDeclCount++;
 		
 		String name = methodName.getName();
     	if(name.equals("main")){
@@ -319,6 +319,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         if(compatibleInts(factorType, termType)) {
         	termMul.obj=termMul.getTerm().obj;
         }
+        
         else {
     		report_error("Greska: Tipovi u izrazu nisu kompatibilni ", termMul);	
     		termMul.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
@@ -429,6 +430,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		report_error("Greska: Negativni clan mora biti tipa int", expr);	
     		expr.obj=new Obj(Obj.NO_VALUE, null, Tab.noType );
     	}
+    	
     	else {
     		expr.obj=expr.getTerm().obj;
     	}
@@ -479,6 +481,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	private boolean isBool(Struct str1) {
 		return (str1.getKind()==Struct.Bool );
 				//|| (str1.getKind()==Struct.Array && str1.getElemType().getKind()==Struct.Bool));
+	}
+	
+	public boolean passed() {
+		return !errorDetected;
 	}
     
 
