@@ -63,11 +63,11 @@ nonterminal DeclList, Decl;
 nonterminal MethodDeclList;
 nonterminal ConstDecl, ConstDeclList, ConstDeclOne;
 nonterminal VarDecl, VarList, VarOne, VarDeclList;
-nonterminal Statement, StatementList, NumConstOpt, DesignatorStatement, DesignatorOptList, DesignatorOpt; 
+nonterminal Statement, StatementList, DesignatorStatement, DesignatorOptList, DesignatorOpt; 
 nonterminal AssignOp, AddOp, MulOp;
 nonterminal Label, OptMinus;
 nonterminal VarDeclError, VarErrorList, DesignatorAssignOpError;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName, Designator, Expr, Term, Factor;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodName, Designator, Expr, Term, Factor, NumConstOpt;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
 
 
