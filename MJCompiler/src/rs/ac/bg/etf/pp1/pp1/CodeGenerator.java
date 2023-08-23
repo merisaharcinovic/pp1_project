@@ -117,12 +117,23 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorOne designatorOne){
-		Code.load(designatorOne.obj);
+		if(designatorOne.getParent().getClass()!=DesignatorAssign.class 
+				&& designatorOne.getParent().getClass()!=DesignatorInc.class
+				&& designatorOne.getParent().getClass()!=DesignatorDec.class
+				&& designatorOne.getParent().getClass()!=StatementRead.class) {
+			Code.load(designatorOne.obj);
+
+		}
 	}
 	
 	public void visit(DesignatorExpr designatorExpr){
-		Code.load(designatorExpr.obj);
+		if(designatorExpr.getParent().getClass()!=DesignatorAssign.class 
+				&& designatorExpr.getParent().getClass()!=DesignatorInc.class
+				&& designatorExpr.getParent().getClass()!=DesignatorDec.class
+				&& designatorExpr.getParent().getClass()!=StatementRead.class) {
+			Code.load(designatorExpr.obj);
 
+		}
     }
 	
 	public void visit(DesignatorInc designatorInc){
@@ -158,8 +169,6 @@ public class CodeGenerator extends VisitorAdaptor {
         Code.store(designator);
 	}
 	
-	
-	
 
 	public void visit(FactorNewExpr factorNew){
         Code.put(Code.newarray);
@@ -168,6 +177,144 @@ public class CodeGenerator extends VisitorAdaptor {
         } else {
             Code.put(0);
         }
+    }
+	
+	public void visit(StatementFindAny findAny){
+		Obj designator=findAny.getDesignator1().obj;
+		
+		//b = niz.findAny(5)
+		//b, niz, 5
+		
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		
+		
+		Code.put(Code.dup_x1);
+		Code.put(Code.dup);
+
+		//b, niz, 5, niz, niz
+		
+		Code.put(Code.arraylength);
+		Code.loadConst(1);
+		Code.put(Code.sub);
+
+		//b, niz, 5, niz, len-1
+		
+		
+		
+		//------WHILE(i>-1)----------
+		
+		int whileStart=Code.pc;
+		
+		Code.put(Code.dup);
+		Code.loadConst(-1);
+		
+		//b, niz, 5, niz, len-1, len-1, -1
+		
+		int end_not_found = Code.pc +1;
+		Code.putFalseJump(Code.ne, 0);
+		
+		//b, niz, 5, niz, len-1
+		
+		Code.put(Code.dup);
+		Code.loadConst(1);
+		Code.put(Code.sub);
+		
+		//b, niz, 5, niz, len-1, len-2
+		
+		Code.put(Code.dup_x2);
+		Code.put(Code.pop);
+		
+		//b, niz, 5, len-2, niz, len-1
+		
+		if(designator.getType().getKind()==Struct.Char) Code.put(Code.baload);
+		else Code.put(Code.aload);
+		
+		//b, niz, 5, len-2, niz[len-1]
+		
+		Code.put(Code.dup_x2);
+		Code.put(Code.pop);
+		
+		//b, niz, niz[len-1], 5, len-2
+		
+		Code.put(Code.dup_x2);
+		Code.put(Code.pop);
+		
+		//b, niz, len-2, niz[len-1], 5
+		Code.put(Code.dup_x2);
+		
+		//b, niz, 5, len-2, niz[len-1], 5
+		
+		int set_stack = Code.pc +1;
+		Code.putFalseJump(Code.eq, 0);
+		
+		//-----FOUND-------
+		
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+
+		Code.loadConst(1);
+		
+		//1
+		//STORE B=1;
+		Code.store(findAny.getDesignator().obj);
+		Code.loadConst(1);
+		Code.loadConst(1);
+		
+		int end = Code.pc +1;
+		Code.putFalseJump(Code.ne, 0);
+
+		//-----------------
+		
+		
+		
+		//--------SET_STACK------
+		
+		Code.fixup(set_stack);
+		
+		//b, niz, 5, len-2
+		
+		Code.put(Code.dup_x2);
+		Code.put(Code.pop);
+		Code.put(Code.dup_x2);
+		Code.put(Code.pop);
+		
+		//b, 5, len-2, niz
+		
+		Code.put(Code.dup_x2);
+		//b, niz, 5, len-2, niz
+		
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		
+		//b, niz, 5, niz, len-2
+
+		Code.putJump(whileStart);
+		
+		//-----------------------
+		
+		
+		
+		//----NOT FOUND----
+		Code.fixup(end_not_found);
+
+		
+		//b, niz, 5, niz, len-1
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+
+
+		Code.loadConst(0);
+		//STORE B=0;
+		Code.store(findAny.getDesignator().obj);
+		
+		Code.fixup(end);
+		
     }
 	
 	
